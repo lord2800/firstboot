@@ -1,0 +1,39 @@
+#!/bin/bash
+
+source /etc/lsb-release
+PUPPET_REPO_URL="https://apt.puppetlabs.com/puppetlabs-release-${DISTRIB_CODENAME}.deb"
+
+echo "Installing wget and curl"
+apt-get install -yq wget curl
+
+echo "Downloading and installing Puppet for codename ${DISTRIB_CODENAME}"
+wget -nv "$PUPPET_REPO_URL"								&& \
+dpkg -i "puppetlabs-release-${DISTRIB_CODENAME}.deb"	&& \
+rm "puppetlabs-release-${DISTRIB_CODENAME}.deb"			&& \
+apt-get update -yq										&& \
+apt-get install -yq puppet
+
+if [ $? -ne 0 ]; then
+	echo "Puppet failed to install?"
+	exit 1
+fi
+
+echo "Puppet installed. Starting puppet agent and contacting puppet server to attempt to bootstrap."
+sed -i '' 's/START=no/START=yes/' /etc/default/puppet
+puppet agent --enable
+update-rc.d puppet defaults
+invoke-rc.d puppet start
+
+puppet agent -t
+times=0
+while [ $? -ne 0 ]; do
+	times=$(($times+1))
+	if [ $times -eq 5 ]; then
+		echo "Node seemingly not converging?"
+		break
+	fi
+	puppet agent -t
+done
+
+echo "Done, disabling firstboot script"
+update-rc.d firstboot disable
