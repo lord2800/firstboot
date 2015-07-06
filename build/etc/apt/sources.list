@@ -1,0 +1,12 @@
+deb [arch=amd64] http://local-apt.jeffhubbard.ninja/ubuntu vivid main
+deb [arch=amd64] http://local-apt.jeffhubbard.ninja/ubuntu vivid-updates main
+deb [arch=amd64] http://local-apt.jeffhubbard.ninja/ubuntu vivid-backports main
+deb [arch=amd64] http://local-apt.jeffhubbard.ninja/packages packages main
+
+deb http://security.ubuntu.com/ubuntu vivid-security main restricted
+deb-src http://security.ubuntu.com/ubuntu vivid-security main restricted
+deb http://security.ubuntu.com/ubuntu vivid-security universe
+deb-src http://security.ubuntu.com/ubuntu vivid-security universe
+deb http://security.ubuntu.com/ubuntu vivid-security multiverse
+deb-src http://security.ubuntu.com/ubuntu vivid-security multiverse
+
