@@ -8,46 +8,18 @@ fi
 # Required-Stop:     $remote_fs $syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Example initscript
-# Description:       Run firstboot tasks (install puppet, enable it, attempt to converge)
+# Short-Description: Firstboot tasks
+# Description:       Run firstboot script (denoted by the FIRSTBOOT environment variable)
 ### END INIT INFO
 
-source /etc/lsb-release
-PUPPET_DEB="puppetlabs-release-pc1-utopic.deb"
-PUPPET_REPO_URL="https://apt.puppetlabs.com/$PUPPET_DEB"
+[ -f /etc/default/firstboot ] && . /etc/default/firstboot
 
-echo "Installing wget"
-apt-get install -yq wget
-
-export DEBIAN_FRONTEND=noninteractive
-echo "Downloading and installing Puppet for codename ${DISTRIB_CODENAME}"
-wget -nv "$PUPPET_REPO_URL"								&& \
-dpkg -i "$PUPPET_DEB"	&& \
-rm "$PUPPET_DEB"			&& \
-apt-get update -yq										&& \
-apt-get install -yq puppet-agent
-
-if [ $? -ne 0 ]; then
-	echo "Puppet failed to install?"
-	exit 1
+if [ $FIRSTBOOT != "" ]; then
+	logger -t firstboot -p syslog.info "Found firstboot script $FIRSTBOOT, downloading and executing"
+	curl $FIRSTBOOT | sh
+else
+	logger -t firstboot -p syslog.info "No firstboot script found, moving on..."
 fi
 
-echo "Puppet installed. Starting puppet agent and contacting puppet server to attempt to bootstrap."
-sed -i '' 's/START=no/START=yes/' /etc/default/puppet
-puppet agent --enable
-update-rc.d puppet defaults
-invoke-rc.d puppet start
-
-puppet agent -t
-times=0
-while [ $? -ne 0 ]; do
-	times=$(($times+1))
-	if [ $times -eq 5 ]; then
-		echo "Node seemingly not converging?"
-		break
-	fi
-	puppet agent -t
-done
-
-echo "Done, disabling firstboot script"
+logger -t firstboot -p syslog.info "Disabling firstboot"
 update-rc.d firstboot disable

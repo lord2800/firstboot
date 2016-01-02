@@ -1,2 +1,2 @@
-# puppet-firstboot
-A debian package for installing and running puppet on firstboot
+# firstboot
+A debian package for downloading and running a script at boot time
